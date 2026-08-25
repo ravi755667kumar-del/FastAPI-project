@@ -1,0 +1,26 @@
+# Environments
+.env
+myenv/
+venv/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs and Editors
+.vscode/
+.idea/
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
