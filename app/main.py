@@ -12,6 +12,14 @@ try:
     print("Loading scaler...")
     scaler = joblib.load("models/churn_scaler.pkl")
     
+    # Patch Keras Dense layer to ignore quantization_config which causes loading errors
+    import keras
+    original_dense_init = keras.layers.Dense.__init__
+    def patched_dense_init(self, *args, **kwargs):
+        kwargs.pop('quantization_config', None)
+        original_dense_init(self, *args, **kwargs)
+    keras.layers.Dense.__init__ = patched_dense_init
+
     print("Loading ANN model...")
     ann_model = load_model("models/churn_ann_model.keras")
     print("All models loaded successfully!")
@@ -21,29 +29,27 @@ except Exception as e:
 # 2. Define the exact features your model expects (10 features total)
 class ChurnRequest(BaseModel):
     CreditScore: float = Field(default=619.0, description="Customer credit score")
+    Gender:float=Field(default=42.0, description="Gender (0 for female, 1 for Male)")
     Age: float = Field(default=42.0, description="Customer age")
-    Gender: float = Field(default=0.0, description="Gender (0 for Female, 1 for Male)")
     Tenure: float = Field(default=2.0, description="Tenure with the bank")
     Balance: float = Field(default=0.0, description="Account balance")
     NumOfProducts: float = Field(default=1.0, description="Number of bank products used")
     IsActiveMember: float = Field(default=1.0, description="Is active member (0 or 1)")
     EstimatedSalary: float = Field(default=101348.88, description="Estimated salary")
-    Geography_Germany: float = Field(default=0.0, description="One-hot encoded column for Germany")
-    Geography_Spain: float = Field(default=0.0, description="One-hot encoded column for Spain")
+    Geography: float = Field(default=0.0, description="One-hot encoded column for Geography")
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "CreditScore": 619.0,
+                "Gender":0.0,
                 "Age": 42.0,
-                "Gender": 0.0,
                 "Tenure": 2.0,
                 "Balance": 0.0,
                 "NumOfProducts": 1.0,
                 "IsActiveMember": 1.0,
                 "EstimatedSalary": 101348.88,
-                "Geography_Germany": 0.0,
-                "Geography_Spain": 0.0,
+                "Geography": 0.0,
             }
         }
     )
@@ -63,11 +69,11 @@ def predict_churn(request: ChurnRequest):
         ]
         binary_cols = [
             'Gender', 'IsActiveMember', 
-            'Geography_Germany', 'Geography_Spain'
+            'Geography'
         ]
 
         # 3. Scale ONLY the 6 numerical features
-        scaled_numerical = scaler.transform(input_df[numerical_cols].to_numpy())
+        scaled_numerical = scaler.transform(input_df[numerical_cols])
 
         # 4. Extract the binary features as a numpy array
         binary_features = input_df[binary_cols].to_numpy()
@@ -76,7 +82,7 @@ def predict_churn(request: ChurnRequest):
         final_features = np.hstack((scaled_numerical, binary_features))
 
         # 6. Pass the combined features to the Neural Network
-        prediction_prob = churn_ann_model.predict(final_features)[0][0]
+        prediction_prob = ann_model.predict(final_features)[0][0]
 
         # 7. Convert probability to a final Churn decision (Threshold = 0.5)
         is_churn = bool(prediction_prob > 0.5)
