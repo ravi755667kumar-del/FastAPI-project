@@ -1,29 +1,29 @@
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
 
 class ChurnRequest(BaseModel):
-    CreditScore: float = Field(default=619.0, description="Customer credit score")
-    Gender:float =Field(default=0.0, description="Gender(0 for Female, 1 for Male)")
-    Age: float = Field(default=42.0, description="Customer age")
-    Tenure: float = Field(default=2.0, description="Tenure with the bank")
-    Balance: float = Field(default=0.0, description="Account balance")
-    NumOfProducts: float = Field(default=1.0, description="Number of bank products used")
-    IsActiveMember: float = Field(default=1.0, description="Is active member (0 or 1)")
-    EstimatedSalary: float = Field(default=101348.88, description="Estimated salary")
-    Geography: float = Field(default=0.0, description="One-hot encoded column for Germany")
-    
+    CreditScore: float = Field(..., description="Customer credit score", examples=[650.0])
+    Gender: Literal["Male", "Female"] = Field(..., description="Gender( Male or Female )")
+    Age: int = Field(..., description="Customer age")
+    Tenure: int = Field(..., description="Tenure with the bank")
+    Balance: float = Field(..., description="Account balance")
+    NumOfProducts: int = Field(..., description="Number of bank products used")
+    IsActiveMember: int = Field(..., description="Is active member (0 or 1)")
+    EstimatedSalary: float = Field(..., description="Estimated salary")
+    Geography: Literal["France", "Germany", "Spain"] = Field(..., description="Choose from France, Germany, or Spain")
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "CreditScore": 619.0,
-                "Gender":0.0,
-                "Age": 42.0,
-                "Tenure": 2.0,
+                "Gender": "Male",
+                "Age": 42,
+                "Tenure": 2,
                 "Balance": 0.0,
-                "NumOfProducts": 1.0,
-                "IsActiveMember": 1.0,
+                "NumOfProducts": 1,
+                "IsActiveMember": 1,
                 "EstimatedSalary": 101348.88,
-                "Geography": 0.0,
+                "Geography": "France",
             }
         }
     )

@@ -5,12 +5,16 @@ from tensorflow.keras.models import load_model
 import pandas as pd
 import numpy as np
 
-app = FastAPI(title="ANN Churn Prediction API")
+app = FastAPI(
+    title="ANN Churn Prediction API",
+    description="This API predicts customer churn using a pre-trained Artificial Neural Network (ANN) model.",
+    version="1.0.0"
+)
 
 # 1. Load the Scaler and the ANN Model when the app starts
 try:
     print("Loading scaler...")
-    scaler = joblib.load("models/churn_scaler.pkl")
+    scaler = joblib.load("models/churn_scaler.h5")
     
     # Patch Keras Dense layer to ignore quantization_config which causes loading errors
     import keras
@@ -29,14 +33,14 @@ except Exception as e:
 # 2. Define the exact features your model expects (10 features total)
 class ChurnRequest(BaseModel):
     CreditScore: float = Field(default=619.0, description="Customer credit score")
-    Gender:float=Field(default=42.0, description="Gender (0 for female, 1 for Male)")
+    Gender:int=Field(default=0 , description="Gender(0 for Female, 1 for Male)")
     Age: float = Field(default=42.0, description="Customer age")
     Tenure: float = Field(default=2.0, description="Tenure with the bank")
     Balance: float = Field(default=0.0, description="Account balance")
     NumOfProducts: float = Field(default=1.0, description="Number of bank products used")
-    IsActiveMember: float = Field(default=1.0, description="Is active member (0 or 1)")
+    IsActiveMember: int = Field(default=1.0, description="Is active member (0 or 1)")
     EstimatedSalary: float = Field(default=101348.88, description="Estimated salary")
-    Geography: float = Field(default=0.0, description="One-hot encoded column for Geography")
+    Geography: str = Field(default=0.0, description="One-hot encoded column for Geography")
 
     model_config = ConfigDict(
         json_schema_extra={
