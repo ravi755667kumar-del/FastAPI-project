@@ -27,3 +27,20 @@ class ChurnRequest(BaseModel):
             }
         }
     )
+
+class PredictionResponse(BaseModel):
+
+    churn_probability: float = Field(
+        ...,
+        description="Probability that the customer will churn"
+    )
+
+    prediction: int = Field(
+        ...,
+        description="1 = Customer will churn, 0 = Customer will stay"
+    )
+
+    result: str = Field(
+        ...,
+        description="Final churn prediction"
+    )
